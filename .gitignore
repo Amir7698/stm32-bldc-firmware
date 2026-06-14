@@ -1,0 +1,10 @@
+build/
+*.o
+*.d
+*.lst
+*.map
+*.bin
+*.hex
+*.elf
+.DS_Store
+Thumbs.db

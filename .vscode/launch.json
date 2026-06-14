@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (ST-Link via OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f4x.cfg"
+            ],
+            "executable": "${workspaceFolder}/build/bldc_firmware.elf",
+            "preLaunchTask": "Build Firmware",
+            "svdFile": "${workspaceFolder}/.vscode/STM32F407.svd",
+            "swoConfig": {
+                "enabled": false
+            },
+            "postLaunchCommands": [
+                "monitor reset halt"
+            ],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none",
+            "armToolchainPath": "${env:ARM_TOOLCHAIN_PATH}",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Debug (J-Link)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "jlink",
+            "device": "STM32F407VG",
+            "interface": "swd",
+            "executable": "${workspaceFolder}/build/bldc_firmware.elf",
+            "preLaunchTask": "Build Firmware",
+            "runToEntryPoint": "main",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
