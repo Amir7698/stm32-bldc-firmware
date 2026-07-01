@@ -19,6 +19,7 @@
 
 #include "../cmsis/stm32f4xx.h"
 #include "../include/pwm.h"
+#include "../include/system_clock.h"
 
 /* Computed ARR for 20 kHz center-aligned PWM at 168 MHz */
 #define ARR_VAL     ((uint16_t)(TIM1_CLK_HZ / (2UL * PWM_FREQ_HZ)))   /* 4200 */

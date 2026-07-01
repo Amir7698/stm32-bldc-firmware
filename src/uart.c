@@ -78,22 +78,47 @@ void uart_send_byte(uint8_t b) {
     USART2->DR = b;   /* Writing DR clears TXE automatically */
 }
 
-void uart_send_frame(uint16_t rpm, uint8_t duty, uint8_t state) {
-    uint8_t frame[5];
-
-    frame[0] = 0xAAU;                    /* Start marker — distinguishes frame start */
-    frame[1] = (uint8_t)(rpm >> 8);      /* RPM high byte */
-    frame[2] = (uint8_t)(rpm & 0xFFU);   /* RPM low byte */
-    frame[3] = duty;                     /* Duty cycle 0–100 */
-    frame[4] = state;                    /* Motor state enum */
-
-    uint8_t crc = crc8(frame, 5U);
-
-    for (uint8_t i = 0; i < 5U; i++) {
-        uart_send_byte(frame[i]);
+static const char *state_name(uint8_t state) {
+    switch (state) {
+        case 0:  return "IDLE";
+        case 1:  return "RUNNING";
+        case 2:  return "FAULT";
+        default: return "UNKNOWN";
     }
-    uart_send_byte(crc);   /* Append CRC as last byte */
+}
 
-    /* Wait for final byte to finish transmitting before returning */
+static void uart_send_str(const char *s) {
+    while (*s) uart_send_byte((uint8_t)*s++);
+}
+
+static void uart_print_num(uint32_t n) {
+    char buf[10];
+    int8_t i = 0;
+    if (n == 0) { uart_send_byte('0'); return; }
+    while (n > 0) { buf[i++] = (char)('0' + (n % 10)); n /= 10; }
+    while (--i >= 0) uart_send_byte((uint8_t)buf[i]);
+}
+
+void uart_send_frame(uint16_t rpm, uint8_t duty, uint8_t state) {
+    /* Build ASCII frame: "RPM:1500 DUTY:50% STATE:RUNNING CRC:xx\r\n" */
+    uint8_t raw[5];
+    raw[0] = 0xAAU;
+    raw[1] = (uint8_t)(rpm >> 8);
+    raw[2] = (uint8_t)(rpm & 0xFFU);
+    raw[3] = duty;
+    raw[4] = state;
+    uint8_t crc = crc8(raw, 5U);
+
+    uart_send_str("RPM:");
+    uart_print_num(rpm);
+    uart_send_str(" DUTY:");
+    uart_print_num(duty);
+    uart_send_byte('%');
+    uart_send_str(" STATE:");
+    uart_send_str(state_name(state));
+    uart_send_str(" CRC:");
+    uart_print_num(crc);
+    uart_send_str("\r\n");
+
     while (!(USART2->SR & USART_SR_TC));
 }

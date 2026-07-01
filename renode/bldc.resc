@@ -1,0 +1,30 @@
+# bldc.resc — Renode simulation script for STM32F407 BLDC firmware
+#
+# Usage (from Renode Monitor):
+#   include @renode/bldc.resc
+#   start
+#
+# UART output appears in the analyzer window (115200 baud, binary frames)
+
+# Create the machine
+mach create "stm32f407-bldc"
+
+# Load STM32F407 platform description (built into Renode)
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+
+# Load the compiled firmware ELF
+sysbus LoadELF @C:/Users/amiru/Desktop/Projects/stm32-bldc-firmware/build/bldc_firmware.elf
+
+# Connect USART2 to a virtual analyzer so we can see UART output
+showAnalyzer sysbus.usart2
+
+# Hook PA0 (direction) and PA1 (enable) so we can toggle them from Monitor
+machine PyDevFromFile @C:/Users/amiru/Desktop/Projects/stm32-bldc-firmware/renode/gpio_stimulus.py sysbus.gpioPortA "gpio_stim"
+
+# Log all peripheral accesses for debugging
+logLevel 3 sysbus.tim1
+logLevel 3 sysbus.usart2
+
+echo "BLDC firmware loaded. Type 'start' to run."
+echo "To toggle enable pin:    sysbus.gpioPortA.gpio_stim ToggleEnable"
+echo "To toggle direction pin: sysbus.gpioPortA.gpio_stim ToggleDirection"
